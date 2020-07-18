@@ -137,10 +137,10 @@ class CycleGAN:
                 d_loss=0.5*np.add(dA_loss,dB_loss)
                 g_loss=self.combined.train_on_batch([imgs_A,imgs_B],[valid,valid,imgs_A,imgs_B,imgs_A,imgs_B])
 
-def load_data(dataset_name,from_origin=False):
-    if from_origin:
-        img_list_A = glob('drive/My Drive/GAN/datasets/'+dataset_name+'/trainA/*.' + "jpg")
-        img_list_B = glob('drive/My Drive/GAN/datasets/'+dataset_name+'/trainB/*.' + "jpg")
+def load_data(dataset_name):
+    if not os.path.exists("datasets/"+dataset_name+"/numpy_data"):
+        img_list_A = glob('datasets/'+dataset_name+'/trainA/*.' + "jpg")
+        img_list_B = glob('datasets/'+dataset_name+'/trainB/*.' + "jpg")
         trainA=[]
         trainB=[]
         for img in img_list_A:
@@ -157,11 +157,15 @@ def load_data(dataset_name,from_origin=False):
             trainB.append(trainB_img)
         trainA=np.array(trainA)
         trainB=np.array(trainB)
+        os.mkdir("datasets/"+dataset_name+"/numpy_data")
+        name=dataset_name.split("2")
+        np.save("datasets/"+dataset_name+"/numpy_data/"+name[0]+"_numpy",trainA)
+        np.save("datasets/"+dataset_name+"/numpy_data/"+name[1]+"_numpy",trainB)
         return trainA,trainB
     else:
       name=dataset_name.split("2")
-      trainA=np.load("drive/My Drive/GAN/datasets/"+dataset_name+"/"+name[0]+"_numpy.npy")
-      trainB=np.load("drive/My Drive/GAN/datasets/"+dataset_name+"/"+name[1]+"_numpy.npy")
+      trainA=np.load("datasets/"+dataset_name+"/numpy_data/"+name[0]+"_numpy.npy")
+      trainB=np.load("datasets/"+dataset_name+"/numpy_data/"+name[1]+"_numpy.npy")
       return trainA,trainB
 
 def resblock(y):
@@ -180,9 +184,9 @@ def active(x,type):
     if type=="LeakyReLU":
         x=LeakyReLU(0.2)(x)
     return x
-
 trainA,trainB=load_data("horse2zebra")
-
+plt.imshow(trainA[2])
 cycle_gan=CycleGAN()
 cycle_gan.train(trainA,trainB,epochs=100,batch_size=1,sample_interval=10)
 print("end")
+#オッス
