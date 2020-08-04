@@ -55,7 +55,7 @@ class CycleGAN:
         valid_B=self.d_B(fake_B)
         self.combined=Model(inputs=[img_A,img_B],outputs=[valid_A,valid_B,reconstr_A,reconstr_B,img_A_id,img_B_id])
         self.combined.compile(loss=["binary_crossentropy","binary_crossentropy","mae","mae","mae","mae"],loss_weights=[1,1,self.lambda_cycle,self.lambda_cycle,self.lambda_id,self.lambda_id],optimizer=optimizer)
-    def resblock(y):
+    def resblock(self,y):
         x=Conv2D(filters=256,kernel_size=3,strides=1,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(y)
         x=InstanceNormalization()(x)
         x=ReLU()(x)
