@@ -178,7 +178,6 @@ def load_data(dataset_name):
       trainB=np.load("datasets/"+dataset_name+"/numpy_data/"+name[1]+"_numpy.npy")
     return trainA,trainB
 
-def save():
 
 
 def resblock(y):
