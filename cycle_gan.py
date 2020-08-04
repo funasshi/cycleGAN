@@ -31,6 +31,8 @@ class CycleGAN:
         # self.gf=32
         self.lambda_cycle=10.0
         self.lambda_id=0.9*self.lambda_cycle
+        self.leaky=0.2
+        self.stddev=0.02**0.5
         optimizer=Adam(0.0002,0.5)
 
         self.d_A=self.build_discriminator()
@@ -58,24 +60,24 @@ class CycleGAN:
 
     def build_generator(self):
         img=Input(shape=self.img_shape)
-        x=Conv2D(filters=64,kernel_size=7,strides=1,padding="same",kernel_initializer=RandomNormal(0,0.02))(img)
+        x=Conv2D(filters=64,kernel_size=7,strides=1,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(img)
         x=InstanceNormalization()(x)
         x=ReLU()(x)
-        x=Conv2D(filters=128,kernel_size=3,strides=2,padding="same",kernel_initializer=RandomNormal(0,0.02))(x)
+        x=Conv2D(filters=128,kernel_size=3,strides=2,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(x)
         x=InstanceNormalization()(x)
         x=ReLU()(x)
-        x=Conv2D(filters=256,kernel_size=3,strides=2,padding="same",kernel_initializer=RandomNormal(0,0.02))(x)
+        x=Conv2D(filters=256,kernel_size=3,strides=2,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(x)
         x=InstanceNormalization()(x)
         x=ReLU()(x)
         for i in range(6):
             x=resblock(x)
-        x=Conv2DTranspose(filters=128,kernel_size=3,strides=2,padding="same",kernel_initializer=RandomNormal(0,0.02))(x)
+        x=Conv2DTranspose(filters=128,kernel_size=3,strides=2,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(x)
         x=InstanceNormalization()(x)
         x=ReLU()(x)
-        x=Conv2DTranspose(filters=64,kernel_size=3,strides=2,padding="same",kernel_initializer=RandomNormal(0,0.02))(x)
+        x=Conv2DTranspose(filters=64,kernel_size=3,strides=2,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(x)
         x=InstanceNormalization()(x)
         x=ReLU()(x)
-        x=Conv2D(filters=3,kernel_size=7,strides=1,padding="same",kernel_initializer=RandomNormal(0,0.02))(x)
+        x=Conv2D(filters=3,kernel_size=7,strides=1,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(x)
         x=InstanceNormalization()(x)
         x=ReLU()(x)
         return Model(img,x)
@@ -85,18 +87,18 @@ class CycleGAN:
     def build_discriminator(self):
 
         img=Input(shape=self.img_shape)
-        x=Conv2D(filters=64,kernel_size=4,strides=2,padding="same",kernel_initializer=RandomNormal(0,0.02))(img)
-        x=LeakyReLU(0.2)(x)
-        x=Conv2D(filters=128,kernel_size=4,strides=2,padding="same",kernel_initializer=RandomNormal(0,0.02))(x)
+        x=Conv2D(filters=64,kernel_size=4,strides=2,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(img)
+        x=LeakyReLU(self.leaky)(x)
+        x=Conv2D(filters=128,kernel_size=4,strides=2,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(x)
         x=InstanceNormalization()(x)
-        x=LeakyReLU(0.2)(x)
-        x=Conv2D(filters=256,kernel_size=4,strides=2,padding="same",kernel_initializer=RandomNormal(0,0.02))(x)
+        x=LeakyReLU(self.leaky)(x)
+        x=Conv2D(filters=256,kernel_size=4,strides=2,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(x)
         x=InstanceNormalization()(x)
-        x=LeakyReLU(0.2)(x)
-        x=Conv2D(filters=512,kernel_size=4,strides=2,padding="same",kernel_initializer=RandomNormal(0,0.02))(x)
+        x=LeakyReLU(self.leaky)(x)
+        x=Conv2D(filters=512,kernel_size=4,strides=2,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(x)
         x=InstanceNormalization()(x)
-        x=LeakyReLU(0.2)(x)
-        x=Conv2D(filters=1,kernel_size=4,strides=1,padding="same",kernel_initializer=RandomNormal(0,0.02))(x)
+        x=LeakyReLU(self.leaky)(x)
+        x=Conv2D(filters=1,kernel_size=4,strides=1,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(x)
         # x=Reshape(target_shape=(x.shape[1]*x.shape[2]*x.shape[3],1))(x)
         # x=AveragePooling1D(pool_size=x.shape[1])(x)
         # x=Flatten()(x)
@@ -105,7 +107,7 @@ class CycleGAN:
 
 
 
-    def train(self,trainA,trainB,epochs,batch_size=1,sample_interval=50):
+    def train(self,trainA,trainB,epochs,batch_size=1):
         valid=np.ones((batch_size,self.patch_rows,self.patch_cols,1))
         fake=np.zeros((batch_size,self.patch_rows,self.patch_cols,1))
         epoch_x=[]
@@ -117,10 +119,15 @@ class CycleGAN:
             if epoch%10==9:
                 imgs_A=trainA[np.random.randint(0,trainA.shape[0],size=1)]
                 fake_B=self.g_AB.predict(imgs_A)
+                imgs_A=np.clip(imgs_A,0,1)
+                fake_B=np.clip(fake_B,0,1)
                 plt.imsave("output/true_A_epoch_"+str(epoch)+".png" ,imgs_A.reshape(128,128,3) )
                 plt.imsave( "output/fake_B_epoch_"+str(epoch)+".png" ,fake_B.reshape(128,128,3) )
                 imgs_B=trainB[np.random.randint(0,trainA.shape[0],size=1)]
                 fake_A=self.g_BA.predict(imgs_B)
+                imgs_B=np.clip(imgs_B,0,1)
+                fake_A=np.clip(fake_A,0,1)
+
                 plt.imsave("output/true_B_epoch_"+str(epoch)+".png" , imgs_B.reshape(128,128,3) )
                 plt.imsave("output/fake_A_epoch_"+str(epoch)+".png" , fake_A.reshape(128,128,3) )
             for batch_i in range(995//batch_size):
@@ -165,25 +172,25 @@ def load_data(dataset_name):
         name=dataset_name.split("2")
         np.save("datasets/"+dataset_name+"/numpy_data/"+name[0]+"_numpy",trainA)
         np.save("datasets/"+dataset_name+"/numpy_data/"+name[1]+"_numpy",trainB)
-        return trainA,trainB
     else:
       name=dataset_name.split("2")
       trainA=np.load("datasets/"+dataset_name+"/numpy_data/"+name[0]+"_numpy.npy")
       trainB=np.load("datasets/"+dataset_name+"/numpy_data/"+name[1]+"_numpy.npy")
-      return trainA,trainB
+    return trainA,trainB
+
+def save():
+
 
 def resblock(y):
-    x=Conv2D(filters=256,kernel_size=3,strides=1,padding="same",kernel_initializer=RandomNormal(0,0.02))(y)
+    x=Conv2D(filters=256,kernel_size=3,strides=1,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(y)
     x=InstanceNormalization()(x)
     x=ReLU()(x)
-    x=Conv2D(filters=256,kernel_size=3,strides=1,padding="same",kernel_initializer=RandomNormal(0,0.02))(x)
+    x=Conv2D(filters=256,kernel_size=3,strides=1,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(x)
     x=InstanceNormalization()(x)
     out=Add()([x,y])
     return out
 
 trainA,trainB=load_data("horse2zebra")
-plt.imshow(trainA[2])
 cycle_gan=CycleGAN()
-cycle_gan.train(trainA,trainB,epochs=100,batch_size=1,sample_interval=10)
+cycle_gan.train(trainA,trainB,epochs=100,batch_size=1)
 print("end")
-#オッス
