@@ -191,5 +191,6 @@ def load_data(dataset_name):
 
 trainA,trainB=load_data("horse2zebra")
 cycle_gan=CycleGAN()
-cycle_gan.train(trainA,trainB,epochs=100,batch_size=1)
+epochs=int(input("epochs:"))
+cycle_gan.train(trainA,trainB,epochs=epochs,batch_size=1)
 print("end")
