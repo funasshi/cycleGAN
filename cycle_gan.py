@@ -78,7 +78,7 @@ class CycleGAN:
         x=InstanceNormalization()(x)
         x=ReLU()(x)
         for i in range(6):
-            x=resblock(x)
+            x=self.resblock(x)
         x=Conv2DTranspose(filters=128,kernel_size=3,strides=2,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(x)
         x=InstanceNormalization()(x)
         x=ReLU()(x)
