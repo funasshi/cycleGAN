@@ -19,22 +19,31 @@ import sys
 from tensorflow_addons.layers import InstanceNormalization
 from PIL import Image
 
+
+#モデル
 class CycleGAN:
-    def __init__(self):
+    def __init__(self,identity=False):
+
+        #入力画像のサイズ
         self.img_rows=128
         self.img_cols=128
         self.channels=3
         self.img_shape=(self.img_rows,self.img_cols,self.channels)
+
+        #discriminator出力のサイズ
         self.patch_rows=self.img_rows//16
         self.patch_cols=self.img_cols//16
-        # self.df=64
-        # self.gf=32
-        self.lambda_cycle=10.0
-        self.lambda_id=0.9*self.lambda_cycle
-        self.leaky=0.2
-        self.stddev=0.02**0.5
+
+        #ハイパーパラメータ
+        self.lambda_cycle=10.0#adversarial_lossに比べたcycle_consistancy_lossの比率(論文と同数値)
+        self.lambda_id=0.5*self.lambda_cycle#adversarial_lossに比べたidentity_lossの比率(論文と同数値)
+        self.leaky=0.2#LeakyReLUの傾き(論文と同数値)
+        self.stddev=0.02**0.5#重みのガウス分布初期化の標準偏差(論文は分散が0.02だったのでおそらく同数値)
+
+        #最適化アルゴリズム(論文と同数値)
         optimizer=Adam(0.0002,0.5)
 
+        #モデル構築
         self.d_A=self.build_discriminator()
         self.d_B=self.build_discriminator()
         self.d_A.compile(loss="binary_crossentropy",optimizer=optimizer,metrics=["accuracy"])
@@ -47,14 +56,21 @@ class CycleGAN:
         fake_A=self.g_BA(img_B)
         reconstr_A=self.g_BA(fake_B)
         reconstr_B=self.g_AB(fake_A)
-        img_A_id=self.g_BA(img_A)
-        img_B_id=self.g_AB(img_B)
+        if identity:
+            img_A_id=self.g_BA(img_A)
+            img_B_id=self.g_AB(img_B)
         self.d_A.trainable=False
         self.d_B.trainable=False
         valid_A=self.d_A(fake_A)
         valid_B=self.d_B(fake_B)
-        self.combined=Model(inputs=[img_A,img_B],outputs=[valid_A,valid_B,reconstr_A,reconstr_B,img_A_id,img_B_id])
-        self.combined.compile(loss=["binary_crossentropy","binary_crossentropy","mae","mae","mae","mae"],loss_weights=[1,1,self.lambda_cycle,self.lambda_cycle,self.lambda_id,self.lambda_id],optimizer=optimizer)
+        if identity:
+            self.combined=Model(inputs=[img_A,img_B],outputs=[valid_A,valid_B,reconstr_A,reconstr_B,img_A_id,img_B_id])
+            self.combined.compile(loss=["binary_crossentropy","binary_crossentropy","mae","mae","mae","mae"],loss_weights=[1,1,self.lambda_cycle,self.lambda_cycle,self.lambda_id,self.lambda_id],optimizer=optimizer)
+        else:
+            self.combined=Model(inputs=[img_A,img_B],outputs=[valid_A,valid_B,reconstr_A,reconstr_B])
+            self.combined.compile(loss=["binary_crossentropy","binary_crossentropy","mae","mae","mae","mae"],loss_weights=[1,1,self.lambda_cycle,self.lambda_cycle],optimizer=optimizer)
+
+        #res-netブロックアーキテクチャ(論文ではInstancenormalizationが入ってなかったかも)
     def resblock(self,y):
         x=Conv2D(filters=256,kernel_size=3,strides=1,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(y)
         x=InstanceNormalization()(x)
@@ -65,7 +81,7 @@ class CycleGAN:
         return out
 
 
-
+        #generatorアーキテクチャ(論文通り)
     def build_generator(self):
         img=Input(shape=self.img_shape)
         x=Conv2D(filters=64,kernel_size=7,strides=1,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(img)
@@ -91,7 +107,7 @@ class CycleGAN:
         return Model(img,x)
 
 
-
+        #discriminatorアーキテクチャ(論文通り)
     def build_discriminator(self):
 
         img=Input(shape=self.img_shape)
@@ -116,28 +132,37 @@ class CycleGAN:
 
 
     def train(self,trainA,trainB,epochs,batch_size=1):
+
+        #正解ラベル
         valid=np.ones((batch_size,self.patch_rows,self.patch_cols,1))
         fake=np.zeros((batch_size,self.patch_rows,self.patch_cols,1))
+
+        #lossのグラフ用データ格納リスト
         epoch_x=[]
         g_loss_y=[]
         d_loss_y=[]
+
+        #訓練
         for epoch in range(epochs):
             epoch_x.append(epoch)
             print("epoch:"+str(epoch))
+
+            #10エポックごとに画像書き出し
             if epoch%10==9:
                 imgs_A=trainA[np.random.randint(0,trainA.shape[0],size=1)]
                 fake_B=self.g_AB.predict(imgs_A)
                 imgs_A=np.clip(imgs_A,0,1)
                 fake_B=np.clip(fake_B,0,1)
-                plt.imsave("output/true_A_epoch_"+str(epoch)+".png" ,imgs_A.reshape(128,128,3) )
-                plt.imsave( "output/fake_B_epoch_"+str(epoch)+".png" ,fake_B.reshape(128,128,3) )
+                plt.imsave("output/true_A/epoch_"+str(epoch)+".png" ,imgs_A.reshape(128,128,3) )
+                plt.imsave( "output/fake_B/epoch_"+str(epoch)+".png" ,fake_B.reshape(128,128,3) )
                 imgs_B=trainB[np.random.randint(0,trainA.shape[0],size=1)]
                 fake_A=self.g_BA.predict(imgs_B)
                 imgs_B=np.clip(imgs_B,0,1)
                 fake_A=np.clip(fake_A,0,1)
+                plt.imsave("output/true_B/epoch_"+str(epoch)+".png" , imgs_B.reshape(128,128,3) )
+                plt.imsave("output/fake_A/epoch_"+str(epoch)+".png" , fake_A.reshape(128,128,3) )
 
-                plt.imsave("output/true_B_epoch_"+str(epoch)+".png" , imgs_B.reshape(128,128,3) )
-                plt.imsave("output/fake_A_epoch_"+str(epoch)+".png" , fake_A.reshape(128,128,3) )
+            #訓練メインパート
             for batch_i in range(995//batch_size):
                 imgs_A=trainA[np.random.randint(0,trainA.shape[0],size=batch_size)]
                 imgs_B=trainB[np.random.randint(0,trainB.shape[0],size=batch_size)]
@@ -155,7 +180,7 @@ class CycleGAN:
                 d_loss_y.append(d_loss)
                 g_loss_y.append(g_loss)
 
-
+#データロード用
 def load_data(dataset_name):
     if not os.path.exists("datasets/"+dataset_name+"/numpy_data"):
         img_list_A = glob('datasets/'+dataset_name+'/trainA/*.' + "jpg")
@@ -185,12 +210,19 @@ def load_data(dataset_name):
       trainA=np.load("datasets/"+dataset_name+"/numpy_data/"+name[0]+"_numpy.npy")
       trainB=np.load("datasets/"+dataset_name+"/numpy_data/"+name[1]+"_numpy.npy")
     return trainA,trainB
+#=================================================================================
 
 
-
-
+#データロード
 trainA,trainB=load_data("horse2zebra")
+
+#モデル定義
 cycle_gan=CycleGAN()
+
+#エポック数入力
 epochs=int(input("epochs:"))
-cycle_gan.train(trainA,trainB,epochs=epochs,batch_size=1)
+batch_size=int(input("batch_size:"))
+
+#バッチサイズ1での訓練
+cycle_gan.train(trainA,trainB,epochs=epochs,batch_size=batch_size)
 print("end")
