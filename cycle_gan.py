@@ -13,11 +13,13 @@ from tensorflow.keras.layers import UpSampling2D,Conv2D,Conv2DTranspose,AverageP
 from tensorflow.keras.models import Sequential,Model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.initializers import RandomNormal
+from tensorflow.keras.callbacks import LearningRateScheduler
 import datetime
 import matplotlib.pyplot as plt
 import sys
 from tensorflow_addons.layers import InstanceNormalization
 from PIL import Image
+
 
 
 #モデル
@@ -40,14 +42,15 @@ class CycleGAN:
         self.leaky=0.2#LeakyReLUの傾き(論文と同数値)
         self.stddev=0.02**0.5#重みのガウス分布初期化の標準偏差(論文は分散が0.02だったのでおそらく同数値)
         self.identity=identity
+
         #最適化アルゴリズム(論文と同数値)
-        optimizer=Adam(0.0002,0.5)
+        self.optimizer=Adam(0.0002,0.5)
 
         #モデル構築
         self.d_A=self.build_discriminator()
         self.d_B=self.build_discriminator()
-        self.d_A.compile(loss="binary_crossentropy",optimizer=optimizer,metrics=["accuracy"])
-        self.d_B.compile(loss="binary_crossentropy",optimizer=optimizer,metrics=["accuracy"])
+        self.d_A.compile(loss="binary_crossentropy",optimizer=self.optimizer,metrics=["accuracy"])
+        self.d_B.compile(loss="binary_crossentropy",optimizer=self.optimizer,metrics=["accuracy"])
         self.g_AB=self.build_generator()
         self.g_BA=self.build_generator()
         img_A=Input(shape=self.img_shape)
@@ -65,10 +68,10 @@ class CycleGAN:
         valid_B=self.d_B(fake_B)
         if self.identity:
             self.combined=Model(inputs=[img_A,img_B],outputs=[valid_A,valid_B,reconstr_A,reconstr_B,img_A_id,img_B_id])
-            self.combined.compile(loss=["binary_crossentropy","binary_crossentropy","mae","mae","mae","mae"],loss_weights=[1,1,self.lambda_cycle,self.lambda_cycle,self.lambda_id,self.lambda_id],optimizer=optimizer)
+            self.combined.compile(loss=["binary_crossentropy","binary_crossentropy","mae","mae","mae","mae"],loss_weights=[1,1,self.lambda_cycle,self.lambda_cycle,self.lambda_id,self.lambda_id],optimizer=self.optimizer)
         else:
             self.combined=Model(inputs=[img_A,img_B],outputs=[valid_A,valid_B,reconstr_A,reconstr_B])
-            self.combined.compile(loss=["binary_crossentropy","binary_crossentropy","mae","mae","mae","mae"],loss_weights=[1,1,self.lambda_cycle,self.lambda_cycle],optimizer=optimizer)
+            self.combined.compile(loss=["binary_crossentropy","binary_crossentropy","mae","mae","mae","mae"],loss_weights=[1,1,self.lambda_cycle,self.lambda_cycle],optimizer=self.optimizer)
 
         #res-netブロックアーキテクチャ(論文ではInstancenormalizationが入ってなかったかも)
     def resblock(self,y):
@@ -162,6 +165,8 @@ class CycleGAN:
                 plt.imsave("output/trueB/epoch_"+str(epoch)+".png" , imgs_B.reshape(128,128,3) )
                 plt.imsave("output/fakeA/epoch_"+str(epoch)+".png" , fake_A.reshape(128,128,3) )
 
+            if epoch>=100:
+                self.optimizer.lr=0.0002(2-epoch/100)
             #訓練メインパート
             for batch_i in range(995//batch_size):
                 imgs_A=trainA[np.random.randint(0,trainA.shape[0],size=batch_size)]
@@ -213,6 +218,11 @@ def load_data(dataset_name):
       trainA=np.load("datasets/"+dataset_name+"/numpy_data/"+name[0]+"_numpy.npy")
       trainB=np.load("datasets/"+dataset_name+"/numpy_data/"+name[1]+"_numpy.npy")
     return trainA,trainB
+
+
+
+
+
 #=================================================================================
 
 
