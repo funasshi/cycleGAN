@@ -166,7 +166,7 @@ class CycleGAN:
                 plt.imsave("output/fakeA/epoch_"+str(epoch)+".png" , fake_A.reshape(128,128,3) )
 
             if epoch>=100:
-                self.optimizer.lr=0.0002(2-epoch/100)
+                self.optimizer.lr=0.0002*(2-epoch/100)
             #訓練メインパート
             for batch_i in range(995//batch_size):
                 imgs_A=trainA[np.random.randint(0,trainA.shape[0],size=batch_size)]
