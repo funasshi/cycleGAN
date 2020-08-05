@@ -153,14 +153,14 @@ class CycleGAN:
                 fake_B=self.g_AB.predict(imgs_A)
                 imgs_A=np.clip(imgs_A,0,1)
                 fake_B=np.clip(fake_B,0,1)
-                plt.imsave("output/true_A/epoch_"+str(epoch)+".png" ,imgs_A.reshape(128,128,3) )
-                plt.imsave( "output/fake_B/epoch_"+str(epoch)+".png" ,fake_B.reshape(128,128,3) )
+                plt.imsave("output/trueA/epoch_"+str(epoch)+".png" ,imgs_A.reshape(128,128,3) )
+                plt.imsave( "output/fakeB/epoch_"+str(epoch)+".png" ,fake_B.reshape(128,128,3) )
                 imgs_B=trainB[np.random.randint(0,trainA.shape[0],size=1)]
                 fake_A=self.g_BA.predict(imgs_B)
                 imgs_B=np.clip(imgs_B,0,1)
                 fake_A=np.clip(fake_A,0,1)
-                plt.imsave("output/true_B/epoch_"+str(epoch)+".png" , imgs_B.reshape(128,128,3) )
-                plt.imsave("output/fake_A/epoch_"+str(epoch)+".png" , fake_A.reshape(128,128,3) )
+                plt.imsave("output/trueB/epoch_"+str(epoch)+".png" , imgs_B.reshape(128,128,3) )
+                plt.imsave("output/fakeA/epoch_"+str(epoch)+".png" , fake_A.reshape(128,128,3) )
 
             #訓練メインパート
             for batch_i in range(995//batch_size):
