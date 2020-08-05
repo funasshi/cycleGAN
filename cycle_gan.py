@@ -39,7 +39,7 @@ class CycleGAN:
         self.lambda_id=0.5*self.lambda_cycle#adversarial_lossに比べたidentity_lossの比率(論文と同数値)
         self.leaky=0.2#LeakyReLUの傾き(論文と同数値)
         self.stddev=0.02**0.5#重みのガウス分布初期化の標準偏差(論文は分散が0.02だったのでおそらく同数値)
-
+        self.identity=identity
         #最適化アルゴリズム(論文と同数値)
         optimizer=Adam(0.0002,0.5)
 
@@ -56,14 +56,14 @@ class CycleGAN:
         fake_A=self.g_BA(img_B)
         reconstr_A=self.g_BA(fake_B)
         reconstr_B=self.g_AB(fake_A)
-        if identity:
+        if self.identity:
             img_A_id=self.g_BA(img_A)
             img_B_id=self.g_AB(img_B)
         self.d_A.trainable=False
         self.d_B.trainable=False
         valid_A=self.d_A(fake_A)
         valid_B=self.d_B(fake_B)
-        if identity:
+        if self.identity:
             self.combined=Model(inputs=[img_A,img_B],outputs=[valid_A,valid_B,reconstr_A,reconstr_B,img_A_id,img_B_id])
             self.combined.compile(loss=["binary_crossentropy","binary_crossentropy","mae","mae","mae","mae"],loss_weights=[1,1,self.lambda_cycle,self.lambda_cycle,self.lambda_id,self.lambda_id],optimizer=optimizer)
         else:
@@ -176,7 +176,10 @@ class CycleGAN:
                 dB_loss_fake=self.d_B.train_on_batch(fake_B,fake)
                 dB_loss=0.5*np.add(dB_loss_real,dB_loss_fake)
                 d_loss=0.5*np.add(dA_loss,dB_loss)
-                g_loss=self.combined.train_on_batch([imgs_A,imgs_B],[valid,valid,imgs_A,imgs_B,imgs_A,imgs_B])
+                if self.identity:
+                    g_loss=self.combined.train_on_batch([imgs_A,imgs_B],[valid,valid,imgs_A,imgs_B,imgs_A,imgs_B])
+                else:
+                    g_loss=self.combined.train_on_batch([imgs_A,imgs_B],[valid,valid,imgs_A,imgs_B])
                 d_loss_y.append(d_loss)
                 g_loss_y.append(g_loss)
 
