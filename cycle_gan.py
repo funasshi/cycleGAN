@@ -144,7 +144,6 @@ class CycleGAN:
         self.epoch_x=[]
         self.g_loss_y=[]
         self.d_loss_y=[]
-        self.
 
         #訓練
         for epoch in range(epochs):
