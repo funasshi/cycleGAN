@@ -205,6 +205,7 @@ class CycleGAN:
 
     def loss_graph(self):
         print(self.epoch_x,self.g_loss_y,self.d_loss_y)
+
         plt.plot(self.epoch_x,self.g_loss_y,label='g_loss')
         plt.plot(self.epoch_x,self.d_loss_y,label='d_loss')
         plt.legend()
