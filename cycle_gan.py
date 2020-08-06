@@ -173,6 +173,8 @@ class CycleGAN:
                 for optimizer in self.optimizers:
                     optimizer.lr=0.0002*(2-epoch/100)
             #訓練メインパート
+            d_loss_y=0
+            g_loss_y=0
             for batch_i in range(995//batch_size):
                 imgs_A=trainA[np.random.randint(0,trainA.shape[0],size=batch_size)]
                 imgs_B=trainB[np.random.randint(0,trainB.shape[0],size=batch_size)]
@@ -194,8 +196,12 @@ class CycleGAN:
                 else:
                     g_loss=self.combined.train_on_batch([imgs_A,imgs_B],[valid,valid,imgs_A,imgs_B])
                 g_loss=g_loss[0]
-                self.d_loss_y.append(d_loss)
-                self.g_loss_y.append(g_loss)
+                d_loss_y+=d_loss
+                g_loss_y+=g_loss
+            d_loss_y/=(995//batch_size)
+            g_loss_y/=(995//batch_size)
+            self.d_loss_y.append(d_loss_y)
+            self.g_loss_y.append(g_loss_y)
 
     def loss_graph(self):
         plt.plot(self.epoch_x,self.g_loss_y,label='g_loss')
