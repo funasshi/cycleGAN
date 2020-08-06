@@ -53,8 +53,8 @@ class CycleGAN:
         #モデル構築
         self.d_A=self.build_discriminator()
         self.d_B=self.build_discriminator()
-        self.d_A.compile(loss="binary_crossentropy",optimizer=self.optimizer1,metrics=["accuracy"])
-        self.d_B.compile(loss="binary_crossentropy",optimizer=self.optimizer2,metrics=["accuracy"])
+        self.d_A.compile(loss="binary_crossentropy",optimizer=self.optimizer1)
+        self.d_B.compile(loss="binary_crossentropy",optimizer=self.optimizer2)
         self.g_AB=self.build_generator()
         self.g_BA=self.build_generator()
         img_A=Input(shape=self.img_shape)
@@ -181,11 +181,14 @@ class CycleGAN:
 
                 dA_loss_real=self.d_A.train_on_batch(imgs_A,valid)
                 dA_loss_fake=self.d_A.train_on_batch(fake_A,fake)
-                dA_loss=0.5*np.add(dA_loss_real,dA_loss_fake)
+                # dA_loss=0.5*np.add(dA_loss_real,dA_loss_fake)
+                dA_loss=0.5*(dA_loss_real+dA_loss_fake)
                 dB_loss_real=self.d_B.train_on_batch(imgs_B,valid)
                 dB_loss_fake=self.d_B.train_on_batch(fake_B,fake)
-                dB_loss=0.5*np.add(dB_loss_real,dB_loss_fake)
-                d_loss=0.5*np.add(dA_loss,dB_loss)
+                # dB_loss=0.5*np.add(dB_loss_real,dB_loss_fake)
+                dB_loss=0.5*(dB_loss_real+dB_loss_fake)
+                # d_loss=0.5*np.add(dA_loss,dB_loss)
+                d_loss=0.5*(dA_loss+dB_loss)
                 if self.identity:
                     g_loss=self.combined.train_on_batch([imgs_A,imgs_B],[valid,valid,imgs_A,imgs_B,imgs_A,imgs_B])
                 else:
@@ -249,4 +252,4 @@ batch_size=int(input("batch_size:"))
 cycle_gan.train(trainA,trainB,epochs=epochs,batch_size=batch_size)
 print("end")
 
-cycle_gan.loss_graph()
+# cycle_gan.loss_graph()
