@@ -204,8 +204,10 @@ class CycleGAN:
             self.g_loss_y.append(g_loss_y)
 
     def loss_graph(self):
+        print(self.epoch_x,self.g_loss_y,self.d_loss_y)
         plt.plot(self.epoch_x,self.g_loss_y,label='g_loss')
         plt.plot(self.epoch_x,self.d_loss_y,label='d_loss')
+        plt.legend()
         plt.savefig('output/figure.png')
 #データロード用
 def load_data(dataset_name):
