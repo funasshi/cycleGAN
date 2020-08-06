@@ -14,6 +14,7 @@ from tensorflow.keras.models import Sequential,Model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.initializers import RandomNormal
 from tensorflow.keras.callbacks import LearningRateScheduler
+from tensorflow.keras.activations import tanh
 import datetime
 import matplotlib.pyplot as plt
 import sys
@@ -27,8 +28,8 @@ class CycleGAN:
     def __init__(self,identity=False):
 
         #入力画像のサイズ
-        self.img_rows=128
-        self.img_cols=128
+        self.img_rows=256
+        self.img_cols=256
         self.channels=3
         self.img_shape=(self.img_rows,self.img_cols,self.channels)
 
@@ -100,7 +101,7 @@ class CycleGAN:
         x=Conv2D(filters=256,kernel_size=3,strides=2,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(x)
         x=InstanceNormalization()(x)
         x=ReLU()(x)
-        for i in range(6):
+        for i in range(9):
             x=self.resblock(x)
         x=Conv2DTranspose(filters=128,kernel_size=3,strides=2,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(x)
         x=InstanceNormalization()(x)
@@ -109,8 +110,9 @@ class CycleGAN:
         x=InstanceNormalization()(x)
         x=ReLU()(x)
         x=Conv2D(filters=3,kernel_size=7,strides=1,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(x)
-        x=InstanceNormalization()(x)
-        x=ReLU()(x)
+        # x=InstanceNormalization()(x)
+        # x=ReLU()(x)
+        x=tanh(x)
         return Model(img,x)
 
 
@@ -157,17 +159,15 @@ class CycleGAN:
             #10エポックごとに画像書き出し
             if epoch%10==9:
                 imgs_A=trainA[np.random.randint(0,trainA.shape[0],size=1)]
-                fake_B=self.g_AB.predict(imgs_A)
-                imgs_A=np.clip(imgs_A,0,1)
-                fake_B=np.clip(fake_B,0,1)
-                plt.imsave("output/trueA/epoch_"+str(epoch)+".png" ,imgs_A.reshape(128,128,3) )
-                plt.imsave( "output/fakeB/epoch_"+str(epoch)+".png" ,fake_B.reshape(128,128,3) )
+                fake_B=self.arrange_image(self.g_AB.predict(imgs_A))
+                imgs_A=self.arrange_image(imgs_A)
+                plt.imsave("output/trueA/epoch_"+str(epoch)+".png" ,imgs_A.reshape(256,256,3) )
+                plt.imsave( "output/fakeB/epoch_"+str(epoch)+".png" ,fake_B.reshape(256,256,3) )
                 imgs_B=trainB[np.random.randint(0,trainA.shape[0],size=1)]
-                fake_A=self.g_BA.predict(imgs_B)
-                imgs_B=np.clip(imgs_B,0,1)
-                fake_A=np.clip(fake_A,0,1)
-                plt.imsave("output/trueB/epoch_"+str(epoch)+".png" , imgs_B.reshape(128,128,3) )
-                plt.imsave("output/fakeA/epoch_"+str(epoch)+".png" , fake_A.reshape(128,128,3) )
+                fake_A=self.arrange_image(self.g_BA.predict(imgs_B))
+                imgs_B=self.arrange_image(imgs_B)
+                plt.imsave("output/trueB/epoch_"+str(epoch)+".png" , imgs_B.reshape(256,256,3) )
+                plt.imsave("output/fakeA/epoch_"+str(epoch)+".png" , fake_A.reshape(256,256,3) )
 
             if epoch>=100:
                 for optimizer in self.optimizers:
@@ -209,8 +209,13 @@ class CycleGAN:
         plt.plot(self.epoch_x,self.d_loss_y,label='d_loss')
         plt.legend()
         plt.savefig('output/figure.png')
+
+    def arrange_image(self,img):
+        img=(img+1)/2
+        return img
+
 #データロード用
-def load_data(dataset_name):
+def load_data(dataset_name,change_to_256=False):
     if not os.path.exists("datasets/"+dataset_name+"/numpy_data"):
         img_list_A = glob('datasets/'+dataset_name+'/trainA/*.' + "jpg")
         img_list_B = glob('datasets/'+dataset_name+'/trainB/*.' + "jpg")
@@ -218,15 +223,17 @@ def load_data(dataset_name):
         trainB=[]
         for img in img_list_A:
             trainA_img = load_img(img,grayscale=False)
-            trainA_img = Image.fromarray(np.uint8(trainA_img))
-            trainA_img = np.asarray(trainA_img.resize((128,128)))
-            trainA_img = img_to_array(trainA_img) /255
+            if change_to_256:
+                trainA_img=trainA_img.resize((256,256))
+            trainA_img = np.uint8(trainA_img)
+            trainA_img = trainA_img /255
             trainA.append(trainA_img)
         for img in img_list_B:
             trainB_img = load_img(img,grayscale=False)
-            trainB_img = Image.fromarray(np.uint8(trainB_img))
-            trainB_img = np.asarray(trainB_img.resize((128,128)))
-            trainB_img = img_to_array(trainB_img) /255
+            if change_to_256:
+                trainB_img=trainB_img.resize((256,256))
+            trainB_img = np.uint8(trainB_img)
+            trainB_img = trainB_img /255
             trainB.append(trainB_img)
         trainA=np.array(trainA)
         trainB=np.array(trainB)
@@ -249,7 +256,8 @@ def load_data(dataset_name):
 
 #データロード
 trainA,trainB=load_data("horse2zebra")
-
+trainA=trainA*2-1
+trainB=trainB*2-1
 #モデル定義
 cycle_gan=CycleGAN()
 
