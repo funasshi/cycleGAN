@@ -141,13 +141,14 @@ class CycleGAN:
         fake=np.zeros((batch_size,self.patch_rows,self.patch_cols,1))
 
         #lossのグラフ用データ格納リスト
-        epoch_x=[]
-        g_loss_y=[]
-        d_loss_y=[]
+        self.epoch_x=[]
+        self.g_loss_y=[]
+        self.d_loss_y=[]
+        self.
 
         #訓練
         for epoch in range(epochs):
-            epoch_x.append(epoch)
+            self.epoch_x.append(epoch)
             print("epoch:"+str(epoch))
 
             #10エポックごとに画像書き出し
@@ -185,9 +186,13 @@ class CycleGAN:
                     g_loss=self.combined.train_on_batch([imgs_A,imgs_B],[valid,valid,imgs_A,imgs_B,imgs_A,imgs_B])
                 else:
                     g_loss=self.combined.train_on_batch([imgs_A,imgs_B],[valid,valid,imgs_A,imgs_B])
-                d_loss_y.append(d_loss)
-                g_loss_y.append(g_loss)
+                self.d_loss_y.append(d_loss)
+                self.g_loss_y.append(g_loss)
 
+    def loss_graph():
+        plt.plot(self.epoch_x,self.g_loss,label='g_loss')
+        plt.plot(self.epoch_x,self.d_loss,label='d_loss')
+        plt.savefig('output/figure.png')
 #データロード用
 def load_data(dataset_name):
     if not os.path.exists("datasets/"+dataset_name+"/numpy_data"):
@@ -239,3 +244,5 @@ batch_size=int(input("batch_size:"))
 #バッチサイズ1での訓練
 cycle_gan.train(trainA,trainB,epochs=epochs,batch_size=batch_size)
 print("end")
+
+cycle_gan.loss_graph()
