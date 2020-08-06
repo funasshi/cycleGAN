@@ -253,4 +253,4 @@ batch_size=int(input("batch_size:"))
 cycle_gan.train(trainA,trainB,epochs=epochs,batch_size=batch_size)
 print("end")
 
-# cycle_gan.loss_graph()
+cycle_gan.loss_graph()
