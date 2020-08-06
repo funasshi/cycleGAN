@@ -193,6 +193,7 @@ class CycleGAN:
                     g_loss=self.combined.train_on_batch([imgs_A,imgs_B],[valid,valid,imgs_A,imgs_B,imgs_A,imgs_B])
                 else:
                     g_loss=self.combined.train_on_batch([imgs_A,imgs_B],[valid,valid,imgs_A,imgs_B])
+                g_loss=g_loss[0]
                 self.d_loss_y.append(d_loss)
                 self.g_loss_y.append(g_loss)
 
