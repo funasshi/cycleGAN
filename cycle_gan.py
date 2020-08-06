@@ -48,6 +48,7 @@ class CycleGAN:
         self.optimizer2=Adam(0.0002,0.5)
         self.optimizer3=Adam(0.0002,0.5)
         self.optimizer4=Adam(0.0002,0.5)
+        self.optimizers=[self.optimizer1,self.optimizer2,self.optimizer3,self.optimizer4]
 
         #モデル構築
         self.d_A=self.build_discriminator()
@@ -169,7 +170,8 @@ class CycleGAN:
                 plt.imsave("output/fakeA/epoch_"+str(epoch)+".png" , fake_A.reshape(128,128,3) )
 
             if epoch>=100:
-                self.optimizer.lr=0.0002*(2-epoch/100)
+                for optimizer in self.optimizers:
+                    optimizer.lr=0.0002*(2-epoch/100)
             #訓練メインパート
             for batch_i in range(995//batch_size):
                 imgs_A=trainA[np.random.randint(0,trainA.shape[0],size=batch_size)]
@@ -192,8 +194,8 @@ class CycleGAN:
                 self.g_loss_y.append(g_loss)
 
     def loss_graph(self):
-        plt.plot(self.epoch_x,self.g_loss,label='g_loss')
-        plt.plot(self.epoch_x,self.d_loss,label='d_loss')
+        plt.plot(self.epoch_x,self.g_loss_y,label='g_loss')
+        plt.plot(self.epoch_x,self.d_loss_y,label='d_loss')
         plt.savefig('output/figure.png')
 #データロード用
 def load_data(dataset_name):
