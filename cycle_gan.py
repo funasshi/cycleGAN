@@ -44,13 +44,16 @@ class CycleGAN:
         self.identity=identity
 
         #最適化アルゴリズム(論文と同数値)
-        self.optimizer=Adam(0.0002,0.5)
+        self.optimizer1=Adam(0.0002,0.5)
+        self.optimizer2=Adam(0.0002,0.5)
+        self.optimizer3=Adam(0.0002,0.5)
+        self.optimizer4=Adam(0.0002,0.5)
 
         #モデル構築
         self.d_A=self.build_discriminator()
         self.d_B=self.build_discriminator()
-        self.d_A.compile(loss="binary_crossentropy",optimizer=self.optimizer,metrics=["accuracy"])
-        self.d_B.compile(loss="binary_crossentropy",optimizer=self.optimizer,metrics=["accuracy"])
+        self.d_A.compile(loss="binary_crossentropy",optimizer=self.optimizer1,metrics=["accuracy"])
+        self.d_B.compile(loss="binary_crossentropy",optimizer=self.optimizer2,metrics=["accuracy"])
         self.g_AB=self.build_generator()
         self.g_BA=self.build_generator()
         img_A=Input(shape=self.img_shape)
@@ -68,10 +71,10 @@ class CycleGAN:
         valid_B=self.d_B(fake_B)
         if self.identity:
             self.combined=Model(inputs=[img_A,img_B],outputs=[valid_A,valid_B,reconstr_A,reconstr_B,img_A_id,img_B_id])
-            self.combined.compile(loss=["binary_crossentropy","binary_crossentropy","mae","mae","mae","mae"],loss_weights=[1,1,self.lambda_cycle,self.lambda_cycle,self.lambda_id,self.lambda_id],optimizer=self.optimizer)
+            self.combined.compile(loss=["binary_crossentropy","binary_crossentropy","mae","mae","mae","mae"],loss_weights=[1,1,self.lambda_cycle,self.lambda_cycle,self.lambda_id,self.lambda_id],optimizer=self.optimizer3)
         else:
             self.combined=Model(inputs=[img_A,img_B],outputs=[valid_A,valid_B,reconstr_A,reconstr_B])
-            self.combined.compile(loss=["binary_crossentropy","binary_crossentropy","mae","mae","mae","mae"],loss_weights=[1,1,self.lambda_cycle,self.lambda_cycle],optimizer=self.optimizer)
+            self.combined.compile(loss=["binary_crossentropy","binary_crossentropy","mae","mae"],loss_weights=[1,1,self.lambda_cycle,self.lambda_cycle],optimizer=self.optimizer4)
 
         #res-netブロックアーキテクチャ(論文ではInstancenormalizationが入ってなかったかも)
     def resblock(self,y):
