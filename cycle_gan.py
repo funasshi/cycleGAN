@@ -188,7 +188,7 @@ class CycleGAN:
                 self.d_loss_y.append(d_loss)
                 self.g_loss_y.append(g_loss)
 
-    def loss_graph():
+    def loss_graph(self):
         plt.plot(self.epoch_x,self.g_loss,label='g_loss')
         plt.plot(self.epoch_x,self.d_loss,label='d_loss')
         plt.savefig('output/figure.png')
