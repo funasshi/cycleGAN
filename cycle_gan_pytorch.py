@@ -176,14 +176,14 @@ trainloader = torch.utils.data.DataLoader(dataset, batch_size=1,shuffle=True)
 #========================================================
 # # 出力画像表示
 def save(epoch):
-    # generatorAB.to("cpu")
-    # generatorBA.to("cpu")
+    generatorAB.to("cpu")
+    generatorBA.to("cpu")
     plt.imsave("output/trueA/epoch_"+str(epoch)+".png",sampleA)
     plt.imsave("output/fakeB/epoch_"+str(epoch)+".png",numpy2tensor2numpy(sampleA))
     plt.imsave("output/trueB/epoch_"+str(epoch)+".png",sampleB)
     plt.imsave("output/fakeA/epoch_"+str(epoch)+".png",numpy2tensor2numpy(sampleB))
-    # generatorAB.cuda()
-    # generatorBA.cuda()
+    generatorAB.cuda()
+    generatorBA.cuda()
 def numpy2tensor2numpy(numpy):
     tensor=torch.Tensor(numpy)
     tensor=(tensor*2-1).permute(2,0,1)
