@@ -200,6 +200,9 @@ for epoch in range(epochs):
         i+=1
         loss_d_sum+=loss_d
         loss_g_sum+=loss_g
+        if i%10==9:
+            print(".",end="")
+    print("")
     loss_d_sum/=i
     loss_g_sum/=i
     g_loss_y.append(loss_g_sum)
