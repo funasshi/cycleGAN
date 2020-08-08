@@ -22,7 +22,6 @@ from tensorflow_addons.layers import InstanceNormalization
 from PIL import Image
 
 
-
 #モデル
 class CycleGAN:
     def __init__(self,identity=False):
@@ -52,25 +51,45 @@ class CycleGAN:
         self.optimizers=[self.optimizer1,self.optimizer2,self.optimizer3,self.optimizer4]
 
         #モデル構築
+
+        #識別機構築
         self.d_A=self.build_discriminator()
         self.d_B=self.build_discriminator()
+
+        #識別機コンパイル
         self.d_A.compile(loss="binary_crossentropy",optimizer=self.optimizer1)
         self.d_B.compile(loss="binary_crossentropy",optimizer=self.optimizer2)
-        self.g_AB=self.build_generator()
-        self.g_BA=self.build_generator()
+
+        #生成器構築
+        self.g_AB=self.build_generator()#AからB
+        self.g_BA=self.build_generator()#BからA
+
+        #入力生成
         img_A=Input(shape=self.img_shape)
         img_B=Input(shape=self.img_shape)
+
+        #生成機で偽物生成
         fake_B=self.g_AB(img_A)
         fake_A=self.g_BA(img_B)
+
+        #再翻訳
         reconstr_A=self.g_BA(fake_B)
         reconstr_B=self.g_AB(fake_A)
+
+        #identity_lossを計算するとき
         if self.identity:
             img_A_id=self.g_BA(img_A)
             img_B_id=self.g_AB(img_B)
+
+        #全体は、生成器モデルのみをトレーニングする
         self.d_A.trainable=False
         self.d_B.trainable=False
+
+        #識別機が偽物を判別
         valid_A=self.d_A(fake_A)
         valid_B=self.d_B(fake_B)
+
+        #全体のモデルを作成
         if self.identity:
             self.combined=Model(inputs=[img_A,img_B],outputs=[valid_A,valid_B,reconstr_A,reconstr_B,img_A_id,img_B_id])
             self.combined.compile(loss=["binary_crossentropy","binary_crossentropy","mae","mae","mae","mae"],loss_weights=[1,1,self.lambda_cycle,self.lambda_cycle,self.lambda_id,self.lambda_id],optimizer=self.optimizer3)
@@ -131,7 +150,7 @@ class CycleGAN:
         x=Conv2D(filters=512,kernel_size=4,strides=2,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(x)
         x=InstanceNormalization()(x)
         x=LeakyReLU(self.leaky)(x)
-        x=Conv2D(filters=1,kernel_size=4,strides=1,padding="same",kernel_initializer=RandomNormal(0,self.stddev))(x)
+        x=Conv2D(filters=1,kernel_size=4,strides=1,padding="same",kernel_initializer=RandomNormal(0,self.stddev),activation="sigmoid")(x)
         # x=Reshape(target_shape=(x.shape[1]*x.shape[2]*x.shape[3],1))(x)
         # x=AveragePooling1D(pool_size=x.shape[1])(x)
         # x=Flatten()(x)
@@ -190,7 +209,7 @@ class CycleGAN:
                 # dB_loss=0.5*np.add(dB_loss_real,dB_loss_fake)
                 dB_loss=0.5*(dB_loss_real+dB_loss_fake)
                 # d_loss=0.5*np.add(dA_loss,dB_loss)
-                d_loss=0.5*(dA_loss+dB_loss)
+                d_loss=dA_loss+dB_loss
                 if self.identity:
                     g_loss=self.combined.train_on_batch([imgs_A,imgs_B],[valid,valid,imgs_A,imgs_B,imgs_A,imgs_B])
                 else:
@@ -252,10 +271,11 @@ def load_data(dataset_name,change_to_256=False):
 
 
 #=================================================================================
-
-
 #データロード
-trainA,trainB=load_data("horse2zebra")
+trainA,trainB=load_data("horse2zebra",True)
+
+data=tf.data.Dataset(trainA)
+
 trainA=trainA*2-1
 trainB=trainB*2-1
 #モデル定義
