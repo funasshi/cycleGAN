@@ -189,7 +189,7 @@ d_loss_y=[]
 
 for epoch in range(epochs):
     print("epoch:",epoch)
-    show()
+    show(epoch)
 
     loss_d_sum=0
     loss_g_sum=0
