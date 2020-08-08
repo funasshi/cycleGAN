@@ -5,7 +5,6 @@ from torchsummary import summary
 import torch.optim as optim
 from layer import Generator,Disctiminator
 from tensorflow.keras.preprocessing.image import load_img,img_to_array
-
 import os
 from glob import glob
 from PIL import Image
@@ -21,6 +20,11 @@ discriminatorB=Disctiminator()
 generatorAB=Generator()
 generatorBA=Generator()
 
+
+discriminatorA.cuda()
+discriminatorB.cuda()
+generatorAB.cuda()
+generatorBA.cuda()
 
 #ハイパーパラメータ
 adam_lr=0.0002
@@ -170,17 +174,20 @@ trainloader = torch.utils.data.DataLoader(dataset, batch_size=1,shuffle=True)
 
 #========================================================
 # # 出力画像表示
-def show(epoch):
+def save(epoch):
+    generatorAB.to("cpu")
+    generatorBA.to("cpu")
     plt.imsave("output/trueA/epoch_"+str(epoch)+".png",sampleA)
     plt.imsave("output/fakeB/epoch_"+str(epoch)+".png",((generatorAB(torch.Tensor(sampleA.reshape(-1,3,256,256))*2-1)+1)/2).detach().numpy().reshape(256,256,3))
     plt.imsave("output/trueB/epoch_"+str(epoch)+".png",sampleB)
     plt.imsave("output/fakeA/epoch_"+str(epoch)+".png",((generatorBA(torch.Tensor(sampleB.reshape(-1,3,256,256))*2-1)+1)/2).detach().numpy().reshape(256,256,3))
+    generatorAB.cuda()
+    generatorBA.cuda()
+
 
 #========================================================
 
 #学習
-trainA=trainA.to("cuda")
-trainB=trainB.to("cuda")
 
 epochs=int(input("epoch:"))
 epoch_x=[]
@@ -189,12 +196,15 @@ d_loss_y=[]
 
 for epoch in range(epochs):
     print("epoch:",epoch)
-    show(epoch)
+    save(epoch)
 
     loss_d_sum=0
     loss_g_sum=0
     i=0
     for trainA,trainB in trainloader:
+        print(i)
+        trainA=trainA.cuda()
+        trainB=trainB.cuda()
         loss_d=d_train(trainA,trainB)
         loss_g=g_train(trainA,trainB)
         i+=1
@@ -208,7 +218,6 @@ for epoch in range(epochs):
     g_loss_y.append(loss_g_sum)
     d_loss_y.append(loss_d_sum)
     epoch_x.append(epoch)
-
 #========================================================
 # ロスグラフ出力
 
