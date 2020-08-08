@@ -202,7 +202,6 @@ for epoch in range(epochs):
     loss_g_sum=0
     i=0
     for trainA,trainB in trainloader:
-        print(i)
         trainA=trainA.cuda()
         trainB=trainB.cuda()
         loss_d=d_train(trainA,trainB)
