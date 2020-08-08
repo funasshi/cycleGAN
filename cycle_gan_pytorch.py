@@ -171,9 +171,9 @@ trainloader = torch.utils.data.DataLoader(dataset, batch_size=1,shuffle=True)
 #========================================================
 # # 出力画像表示
 def show(epoch):
-    plt.imshow("output/trueA/epoch_"+str(epoch)+".png",sampleA)
+    plt.imsave("output/trueA/epoch_"+str(epoch)+".png",sampleA)
     plt.imsave("output/fakeB/epoch_"+str(epoch)+".png",((generatorAB(torch.Tensor(sampleA.reshape(-1,3,256,256))*2-1)+1)/2).detach().numpy().reshape(256,256,3))
-    plt.imshow("output/trueB/epoch_"+str(epoch)+".png",sampleB)
+    plt.imsave("output/trueB/epoch_"+str(epoch)+".png",sampleB)
     plt.imsave("output/fakeA/epoch_"+str(epoch)+".png",((generatorBA(torch.Tensor(sampleB.reshape(-1,3,256,256))*2-1)+1)/2).detach().numpy().reshape(256,256,3))
 
 #========================================================
