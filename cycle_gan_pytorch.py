@@ -20,7 +20,6 @@ discriminatorB=Disctiminator()
 generatorAB=Generator()
 generatorBA=Generator()
 
-
 discriminatorA.cuda()
 discriminatorB.cuda()
 generatorAB.cuda()
@@ -153,8 +152,10 @@ def load_data(dataset_name,change_to_256=False):
       trainB=np.load("datasets/"+dataset_name+"/numpy_data/"+name[1]+"_numpy.npy")
     sampleA=trainA[100]
     sampleB=trainB[0]
-    trainA=torch.Tensor(trainA.reshape(-1,3,256,256))
-    trainB=torch.Tensor(trainB.reshape(-1,3,256,256))
+    trainA=torch.Tensor(trainA)
+    trainB=torch.Tensor(trainB)
+    trainA=trainA.permute(0,3,1,2)
+    trainB=trainB.permute(0,3,1,2)
     return trainA,trainB,sampleA,sampleB
 
 class Data(torch.utils.data.Dataset):
@@ -175,14 +176,24 @@ trainloader = torch.utils.data.DataLoader(dataset, batch_size=1,shuffle=True)
 #========================================================
 # # 出力画像表示
 def save(epoch):
-    generatorAB.to("cpu")
-    generatorBA.to("cpu")
+    # generatorAB.to("cpu")
+    # generatorBA.to("cpu")
     plt.imsave("output/trueA/epoch_"+str(epoch)+".png",sampleA)
-    plt.imsave("output/fakeB/epoch_"+str(epoch)+".png",((generatorAB(torch.Tensor(sampleA.reshape(-1,3,256,256))*2-1)+1)/2).detach().numpy().reshape(256,256,3))
+    plt.imsave("output/fakeB/epoch_"+str(epoch)+".png",numpy2tensor2numpy(sampleA))
     plt.imsave("output/trueB/epoch_"+str(epoch)+".png",sampleB)
-    plt.imsave("output/fakeA/epoch_"+str(epoch)+".png",((generatorBA(torch.Tensor(sampleB.reshape(-1,3,256,256))*2-1)+1)/2).detach().numpy().reshape(256,256,3))
-    generatorAB.cuda()
-    generatorBA.cuda()
+    plt.imsave("output/fakeA/epoch_"+str(epoch)+".png",numpy2tensor2numpy(sampleB))
+    # generatorAB.cuda()
+    # generatorBA.cuda()
+def numpy2tensor2numpy(numpy):
+    tensor=torch.Tensor(numpy)
+    tensor=(tensor*2-1).permute(2,0,1)
+    tensor=generatorAB(torch.reshape(tensor,(1,3,256,256)))
+    tensor=torch.reshape(tensor,(3,256,256)).permute(1,2,0)
+    tensor=(tensor+1)/2
+    numpy=tensor.detach().numpy()
+    return numpy
+
+
 
 
 #========================================================
