@@ -82,16 +82,16 @@ def save(epoch,generatorAB,generatorBA):
         generatorAB.to("cpu")
         generatorBA.to("cpu")
     plt.imsave("output/trueA/epoch_"+str(epoch)+".png",sampleA)
-    plt.imsave("output/fakeB/epoch_"+str(epoch)+".png",numpy2tensor2numpy(sampleA))
+    plt.imsave("output/fakeB/epoch_"+str(epoch)+".png",numpy2tensor2numpy(sampleA,generatorAB))
     plt.imsave("output/trueB/epoch_"+str(epoch)+".png",sampleB)
-    plt.imsave("output/fakeA/epoch_"+str(epoch)+".png",numpy2tensor2numpy(sampleB))
+    plt.imsave("output/fakeA/epoch_"+str(epoch)+".png",numpy2tensor2numpy(sampleB,generatorBA))
     if torch.cuda.is_available():
         generatorAB.cuda()
         generatorBA.cuda()
-def numpy2tensor2numpy(numpy):
+def numpy2tensor2numpy(numpy,generator):
     tensor=torch.Tensor(numpy)
     tensor=(tensor*2-1).permute(2,0,1)
-    tensor=generatorAB(torch.reshape(tensor,(1,3,256,256)))
+    tensor=generator(torch.reshape(tensor,(1,3,256,256)))
     tensor=torch.reshape(tensor,(3,256,256)).permute(1,2,0)
     tensor=(tensor+1)/2
     numpy=tensor.detach().numpy()
