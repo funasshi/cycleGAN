@@ -10,6 +10,8 @@ from glob import glob
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
+import time
 
 
 #========================================================
@@ -192,14 +194,16 @@ def numpy2tensor2numpy(numpy):
     tensor=(tensor+1)/2
     numpy=tensor.detach().numpy()
     return numpy
+#========================================================
+#進捗表示
 
-
-
+def progress(p, l):
+    sys.stdout.write("\rprocessing : %d %%" %(int(p * 100 / (l - 1))))
+    sys.stdout.flush()
 
 #========================================================
 
 #学習
-
 epochs=int(input("epoch:"))
 epoch_x=[]
 g_loss_y=[]
@@ -213,8 +217,7 @@ for epoch in range(epochs):
     loss_g_sum=0
     i=0
     for trainA,trainB in trainloader:
-        if i%10==9:
-            print("■",end="")
+        progress(i,len(trainloader))
         trainA=trainA.cuda()
         trainB=trainB.cuda()
         loss_d=d_train(trainA,trainB)
