@@ -1,0 +1,91 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from tensorflow.keras.preprocessing.image import load_img,img_to_array
+import os
+from glob import glob
+from PIL import Image
+import numpy as np
+import matplotlib.pyplot as plt
+import sys
+import time
+
+
+#========================================================
+#dataset用意
+def load_data(dataset_name,change_to_256=False):
+    if not os.path.exists("datasets/"+dataset_name+"/numpy_data"):
+        img_list_A = glob('datasets/'+dataset_name+'/trainA/*.' + "jpg")
+        img_list_B = glob('datasets/'+dataset_name+'/trainB/*.' + "jpg")
+        trainA=[]
+        trainB=[]
+        for img in img_list_A:
+            trainA_img = load_img(img,grayscale=False)
+            if change_to_256:
+                trainA_img=trainA_img.resize((256,256))
+            trainA_img = np.uint8(trainA_img)
+            trainA_img = trainA_img /255
+            trainA.append(trainA_img)
+        for img in img_list_B:
+            trainB_img = load_img(img,grayscale=False)
+            if change_to_256:
+                trainB_img=trainB_img.resize((256,256))
+            trainB_img = np.uint8(trainB_img)
+            trainB_img = trainB_img /255
+            trainB.append(trainB_img)
+        trainA=np.array(trainA)
+        trainB=np.array(trainB)
+        os.mkdir("datasets/"+dataset_name+"/numpy_data")
+        name=dataset_name.split("2")
+        np.save("datasets/"+dataset_name+"/numpy_data/"+name[0]+"_numpy",trainA)
+        np.save("datasets/"+dataset_name+"/numpy_data/"+name[1]+"_numpy",trainB)
+    else:
+      name=dataset_name.split("2")
+      trainA=np.load("datasets/"+dataset_name+"/numpy_data/"+name[0]+"_numpy.npy")
+      trainB=np.load("datasets/"+dataset_name+"/numpy_data/"+name[1]+"_numpy.npy")
+    sampleA=trainA[100]
+    sampleB=trainB[0]
+    trainA=torch.Tensor(trainA)
+    trainB=torch.Tensor(trainB)
+    trainA=trainA.permute(0,3,1,2)
+    trainB=trainB.permute(0,3,1,2)
+    return trainA,trainB,sampleA,sampleB
+
+class Data(torch.utils.data.Dataset):
+    def __init__(self,A,B):
+        super(Data,self).__init__()
+        self.A=A
+        self.B=B
+        self.len=min(A.size()[0],B.size()[0])
+    def __len__(self):
+        return self.len
+    def __getitem__(self,index):
+        return self.A[index],self.B[index]
+#========================================================
+# 出力画像表示
+def save(epoch,generatorAB,generatorBA,sampleA,sampleB):
+    if torch.cuda.is_available():
+        generatorAB.to("cpu")
+        generatorBA.to("cpu")
+    plt.imsave("output/trueA/epoch_"+str(epoch)+".png",sampleA)
+    plt.imsave("output/fakeB/epoch_"+str(epoch)+".png",numpy2tensor2numpy(sampleA))
+    plt.imsave("output/trueB/epoch_"+str(epoch)+".png",sampleB)
+    plt.imsave("output/fakeA/epoch_"+str(epoch)+".png",numpy2tensor2numpy(sampleB))
+    if torch.cuda.is_available():
+        generatorAB.cuda()
+        generatorBA.cuda()
+def numpy2tensor2numpy(numpy):
+    tensor=torch.Tensor(numpy)
+    tensor=(tensor*2-1).permute(2,0,1)
+    tensor=generatorAB(torch.reshape(tensor,(1,3,256,256)))
+    tensor=torch.reshape(tensor,(3,256,256)).permute(1,2,0)
+    tensor=(tensor+1)/2
+    numpy=tensor.detach().numpy()
+    return numpy
+
+#========================================================
+#進捗表示
+
+def progress(p, l):
+    sys.stdout.write("\rprocessing : %d %%" %(int(p * 100 / (l - 1))))
+    sys.stdout.flush()
