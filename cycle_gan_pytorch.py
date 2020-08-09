@@ -280,7 +280,7 @@ for epoch in range(epochs):
     g_loss_y.append(loss_g_sum)
     d_loss_y.append(loss_d_sum)
     epoch_x.append(epoch)
-    save(epoch,generatorAB,generatorBA)
+    save(epoch)
 
 #========================================================
 # ロスグラフ出力
