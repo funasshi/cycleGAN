@@ -9,6 +9,11 @@ import matplotlib.pyplot as plt
 from tools import *
 
 
+a=a.reshape((3,256,256))
+a=tensor2numpy(a)
+a=(a+1)/2
+plt.imsave("g.png",a)
+
 #========================================================
 #モデル構築
 
@@ -88,14 +93,12 @@ def g_train(trainA,trainB):
     fakeA=generatorBA(trainB)
     reconstA=generatorBA(fakeB)
     reconstB=generatorAB(fakeA)
-    identityA=generatorBA(trainA)
-    identityB=generatorAB(trainB)
 
     result_fakeA=discriminatorA(fakeA)
     result_fakeB=discriminatorB(fakeB)
 
-    loss_ad_A=criterion_ad_A(result_fakeA,torch.zeros_like(result_fakeA))
-    loss_ad_B=criterion_ad_B(result_fakeB,torch.zeros_like(result_fakeB))
+    loss_ad_A=criterion_ad_A(result_fakeA,torch.ones_like(result_fakeA))
+    loss_ad_B=criterion_ad_B(result_fakeB,torch.ones_like(result_fakeB))
     ad_loss=loss_ad_A+loss_ad_B
     cycle_lossA=criterion_cyc_A(reconstA,trainA)
     cycle_lossB=criterion_cyc_B(reconstB,trainB)

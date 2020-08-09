@@ -60,13 +60,13 @@ class Data(torch.utils.data.Dataset):
     def __getitem__(self,index):
         return self.A[index],self.B[index]
 
-def sample_data():
-    sampleA_path="output/sample/sampleA.jpg"
+def sample_data():#正しい
+    sampleA_path="output/sample/sampleA.png"
     sampleA_img = load_img(sampleA_path,grayscale=False)
     sampleA_img=sampleA_img.resize((256,256))
     sampleA_img = np.uint8(sampleA_img)
     sampleA_img = sampleA_img /255
-    sampleB_path="output/sample/sampleB.jpg"
+    sampleB_path="output/sample/sampleB.png"
     sampleB_img = load_img(sampleB_path,grayscale=False)
     sampleB_img=sampleB_img.resize((256,256))
     sampleB_img = np.uint8(sampleB_img)
