@@ -43,13 +43,11 @@ def load_data(dataset_name,change_to_256=False):
       name=dataset_name.split("2")
       trainA=np.load("datasets/"+dataset_name+"/numpy_data/"+name[0]+"_numpy.npy")
       trainB=np.load("datasets/"+dataset_name+"/numpy_data/"+name[1]+"_numpy.npy")
-    sampleA=trainA[100]
-    sampleB=trainB[0]
     trainA=torch.Tensor(trainA)
     trainB=torch.Tensor(trainB)
     trainA=trainA.permute(0,3,1,2)
     trainB=trainB.permute(0,3,1,2)
-    return trainA,trainB,sampleA,sampleB
+    return trainA,trainB
 
 class Data(torch.utils.data.Dataset):
     def __init__(self,A,B):
@@ -61,9 +59,25 @@ class Data(torch.utils.data.Dataset):
         return self.len
     def __getitem__(self,index):
         return self.A[index],self.B[index]
+
+
+def sample_data():
+    sampleA_path="output/sample/sampleA.jpg"
+    sampleA_img = load_img(sampleA_path,grayscale=False)
+    sampleA_img=sampleA_img.resize((256,256))
+    sampleA_img = np.uint8(sampleA_img)
+    sampleA_img = sampleA_img /255
+    sampleB_path="output/sample/sampleB.jpg"
+    sampleB_img = load_img(sampleB_path,grayscale=False)
+    sampleB_img=sampleB_img.resize((256,256))
+    sampleB_img = np.uint8(sampleB_img)
+    sampleB_img = sampleB_img /255
+    return sampleA_img,sampleB_img
+
 #========================================================
 # 出力画像表示
-def save(epoch,generatorAB,generatorBA,sampleA,sampleB):
+def save(epoch,generatorAB,generatorBA):
+    sampleA,sampleB=sample_data()
     if torch.cuda.is_available():
         generatorAB.to("cpu")
         generatorBA.to("cpu")

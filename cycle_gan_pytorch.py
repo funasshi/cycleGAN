@@ -10,7 +10,6 @@ import sys
 import time
 from tools import *
 
-
 #========================================================
 #モデル構築
 
@@ -120,7 +119,7 @@ def g_train(trainA,trainB):
 #========================================================
 #datasetloader構築
 
-trainA,trainB,sampleA,sampleB=load_data("horse2zebra",True)
+trainA,trainB=load_data("horse2zebra",True)
 dataset = Data(trainA*2-1,trainB*2-1)
 trainloader = torch.utils.data.DataLoader(dataset, batch_size=1,shuffle=True)
 
