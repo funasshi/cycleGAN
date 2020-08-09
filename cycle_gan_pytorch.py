@@ -7,13 +7,6 @@ from layer import Generator,Disctiminator
 import numpy as np
 import matplotlib.pyplot as plt
 from tools import *
-
-
-a=a.reshape((3,256,256))
-a=tensor2numpy(a)
-a=(a+1)/2
-plt.imsave("g.png",a)
-
 #========================================================
 #モデル構築
 
