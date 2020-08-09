@@ -170,7 +170,7 @@ class Data(torch.utils.data.Dataset):
         return self.A[index],self.B[index]
 
 trainA,trainB,sampleA,sampleB=load_data("horse2zebra",True)
-dataset = Data(trainA*2-1,trainB*-1)
+dataset = Data(trainA*2-1,trainB*2-1)
 trainloader = torch.utils.data.DataLoader(dataset, batch_size=1,shuffle=True)
 
 #========================================================

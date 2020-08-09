@@ -114,3 +114,6 @@ class Disctiminator(nn.Module):
         x=F.leaky_relu(self.ins_norm_4(x),negative_slope=0.2)
         x=torch.sigmoid(self.conv_5(x))
         return x
+
+
+    
