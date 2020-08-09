@@ -90,7 +90,8 @@ def save(epoch,generatorAB,generatorBA):
 
 def numpy2tensor2numpy(numpy,generator):
     tensor=torch.Tensor(numpy)
-    tensor=(tensor*2-1).permute(2,0,1)
+    tensor=tensor*2-1
+    tensor=tensor.permute(2,0,1)
     tensor=generator(torch.reshape(tensor,(1,3,256,256)))
     tensor=torch.reshape(tensor,(3,256,256)).permute(1,2,0)
     tensor=(tensor+1)/2
