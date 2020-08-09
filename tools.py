@@ -83,18 +83,18 @@ def save(epoch,generatorAB,generatorBA):
     plt.imsave("output/trueA/epoch_"+str(epoch)+".png",sampleA)
     sampleA=sampleA*2-1
     sampleA=numpy2tensor(sampleA)
-    sampleA=sampleA.reshape((1,256,256,3))
+    sampleA=sampleA.reshape((1,3,256,256))
     fakeB=generatorAB(sampleA)
-    fakeB=fakeB.reshape((256,256,3))
+    fakeB=fakeB.reshape((3,256,256))
     fakeB=tensor2numpy(fakeB)
     fakeB=(fakeB+1)/2
     plt.imsave("output/fakeB/epoch_"+str(epoch)+".png",fakeB)
     plt.imsave("output/trueB/epoch_"+str(epoch)+".png",sampleB)
     sampleB=sampleB*2-1
     sampleB=numpy2tensor(sampleB)
-    sampleB=sampleB.reshape((1,256,256,3))
+    sampleB=sampleB.reshape((1,3,256,256))
     fakeA=generatorBA(sampleB)
-    fakeA=fakeA.reshape((256,256,3))
+    fakeA=fakeA.reshape((3,256,256))
     fakeA=tensor2numpy(fakeA)
     fakeA=(fakeA+1)/2
     plt.imsave("output/fakeA/epoch_"+str(epoch)+".png",fakeA)
