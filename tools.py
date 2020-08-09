@@ -60,7 +60,6 @@ class Data(torch.utils.data.Dataset):
     def __getitem__(self,index):
         return self.A[index],self.B[index]
 
-
 def sample_data():
     sampleA_path="output/sample/sampleA.jpg"
     sampleA_img = load_img(sampleA_path,grayscale=False)
@@ -88,6 +87,7 @@ def save(epoch,generatorAB,generatorBA):
     if torch.cuda.is_available():
         generatorAB.cuda()
         generatorBA.cuda()
+
 def numpy2tensor2numpy(numpy,generator):
     tensor=torch.Tensor(numpy)
     tensor=(tensor*2-1).permute(2,0,1)
