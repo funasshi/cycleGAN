@@ -7,6 +7,8 @@ from layer import Generator,Disctiminator
 import numpy as np
 import matplotlib.pyplot as plt
 from tools import *
+
+
 #========================================================
 #モデル構築
 
@@ -76,7 +78,7 @@ def d_train(trainA,trainB):
     optimizer_gBA.step()
     optimizer_dA.step()
     optimizer_dB.step()
-    return loss_d
+    return loss_d.item()
 
 #========================================================
 #generatorの訓練
@@ -109,7 +111,7 @@ def g_train(trainA,trainB):
     optimizer_gBA.step()
     optimizer_dA.step()
     optimizer_dB.step()
-    return loss_g
+    return loss_g.item()
 
 #========================================================
 #datasetloader構築
