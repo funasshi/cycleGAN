@@ -22,10 +22,28 @@ if torch.cuda.is_available():
     generatorAB.cuda()
     generatorBA.cuda()
 
+
+
+#========================================================
 #ハイパーパラメータ
 adam_lr=0.0002
 adam_beta=(0.5,0.999)
 cyc=10
+id=0.5*cyc
+stddev=0.02**0.5
+#========================================================
+# #重みの初期化
+# def init_weights(m):
+#     nn.init.normal_(m.weight, 0.0, stddev)
+# discriminatorA.weight
+# nn.init.normal_(discriminatorA.weight, 0.0, stddev)
+# summary(generatorAB,(3,256,256))
+#
+# generatorAB.apply(init_weights)
+# generatorBA.apply(init_weights)
+# discriminatorA.apply(init_weights)
+# discriminatorB.apply(init_weights)
+#
 
 #========================================================
 #ロス定義
@@ -88,6 +106,9 @@ def g_train(trainA,trainB):
     fakeA=generatorBA(trainB)
     reconstA=generatorBA(fakeB)
     reconstB=generatorAB(fakeA)
+    identityA=generatorBA(trainA)
+    identityB=generatorAB(trainB)
+
 
     result_fakeA=discriminatorA(fakeA)
     result_fakeB=discriminatorB(fakeB)
@@ -98,8 +119,11 @@ def g_train(trainA,trainB):
     cycle_lossA=criterion_cyc_A(reconstA,trainA)
     cycle_lossB=criterion_cyc_B(reconstB,trainB)
     cycle_loss=cycle_lossA+cycle_lossB
+    identity_lossA=criterion_id_A(identityA,trainA)
+    identity_lossB=criterion_id_B(identityB,trainB)
+    identity_loss=identity_lossA+identity_lossB
 
-    loss_g=ad_loss+cyc*cycle_loss
+    loss_g=ad_loss+cyc*cycle_loss+id*identity_loss
     optimizer_dA.zero_grad()
     optimizer_dB.zero_grad()
     optimizer_gAB.zero_grad()
