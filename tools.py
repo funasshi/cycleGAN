@@ -128,8 +128,8 @@ class ImagePool():
     def query(self, images):
         images.to("cpu")
         if len(self.images)<50:
-            self.images.append(images)
+            self.images.append(images.detach())
         else:
             del self.images[0]
-            self.images.append(images)
+            self.images.append(images.detach())
         return torch.cat(self.images, 0).cuda()
