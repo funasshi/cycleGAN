@@ -117,3 +117,19 @@ def tensor2numpy(tensor):
 def progress(p, l):
     sys.stdout.write("\rprocessing : %d %%" %(int(p * 100 / (l - 1))))
     sys.stdout.flush()
+
+
+
+class ImagePool():
+    def __init__(self, pool_size):
+        self.pool_size = pool_size
+        self.images = []
+
+    def query(self, images):
+        images.to("cpu")
+        if len(self.images)<50:
+            self.images.append(images)
+        else:
+            del self.images[0]
+            self.images.append(images)
+        return torch.cat(self.images, 0).cuda()

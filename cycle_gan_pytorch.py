@@ -70,11 +70,20 @@ optimizer_gAB = optim.Adam(generatorAB.parameters(),lr=adam_lr,betas=adam_beta)
 optimizer_gBA = optim.Adam(generatorBA.parameters(),lr=adam_lr,betas=adam_beta)
 
 #========================================================
+#pool
+poolA=ImagePool(50)
+poolB=ImagePool(50)
+
+
+
+#========================================================
 #discriminatorの訓練
 
 def d_train(trainA,trainB):
     fakeB=generatorAB(trainA)
     fakeA=generatorBA(trainB)
+    fakeA=poolA.query(fakeA)
+    fakeB=poolB.query(fakeB)
     result_trueA=discriminatorA(trainA)
     result_trueB=discriminatorB(trainB)
     result_fakeA=discriminatorA(fakeA)
