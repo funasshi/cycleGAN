@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchsummary import summary
 import torch.optim as optim
-from layer import Generator,Disctiminator
+from layer import Generator,Discriminator
 import numpy as np
 import matplotlib.pyplot as plt
 from tools import *
@@ -12,8 +12,8 @@ from tools import *
 #========================================================
 #モデル構築
 
-discriminatorA=Disctiminator()
-discriminatorB=Disctiminator()
+discriminatorA=Discriminator()
+discriminatorB=Discriminator()
 generatorAB=Generator()
 generatorBA=Generator()
 if torch.cuda.is_available():
@@ -49,8 +49,8 @@ stddev=0.02**0.5
 #ロス定義
 
 #adversarial_loss
-criterion_ad_A = nn.BCELoss()
-criterion_ad_B = nn.BCELoss()
+criterion_ad_A = nn.MSELoss()
+criterion_ad_B = nn.MSELoss()
 
 #cycle_consistancy_loss
 criterion_cyc_A = nn.L1Loss()

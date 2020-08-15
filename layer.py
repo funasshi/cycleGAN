@@ -90,9 +90,9 @@ class Generator(nn.Module):
 
 
 
-class Disctiminator(nn.Module):
+class Discriminator(nn.Module):
     def __init__(self):
-        super(Disctiminator,self).__init__()
+        super(Discriminator,self).__init__()
         self.conv_1=nn.Conv2d(3,64,kernel_size=4,stride=2,padding=1)
         self.ins_norm_1=nn.InstanceNorm2d(64)
         self.conv_2=nn.Conv2d(64,128,kernel_size=4,stride=2,padding=1)
@@ -114,6 +114,3 @@ class Disctiminator(nn.Module):
         x=F.leaky_relu(self.ins_norm_4(x),negative_slope=0.2)
         x=torch.sigmoid(self.conv_5(x))
         return x
-
-
-    
