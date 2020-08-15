@@ -26,7 +26,8 @@ if torch.cuda.is_available():
 
 #========================================================
 #ハイパーパラメータ
-adam_lr=0.0002
+adam_lr_g=0.0002
+adam_lr_d=0.0001
 adam_beta=(0.5,0.999)
 cyc=10
 id=0.5*cyc
@@ -64,10 +65,10 @@ criterion_id_B = nn.L1Loss()
 #========================================================
 #最適化関数定義
 
-optimizer_dA = optim.Adam(discriminatorA.parameters(),lr=adam_lr,betas=adam_beta)
-optimizer_dB = optim.Adam(discriminatorB.parameters(),lr=adam_lr,betas=adam_beta)
-optimizer_gAB = optim.Adam(generatorAB.parameters(),lr=adam_lr,betas=adam_beta)
-optimizer_gBA = optim.Adam(generatorBA.parameters(),lr=adam_lr,betas=adam_beta)
+optimizer_dA = optim.Adam(discriminatorA.parameters(),lr=adam_lr_d,betas=adam_beta)
+optimizer_dB = optim.Adam(discriminatorB.parameters(),lr=adam_lr_d,betas=adam_beta)
+optimizer_gAB = optim.Adam(generatorAB.parameters(),lr=adam_lr_g,betas=adam_beta)
+optimizer_gBA = optim.Adam(generatorBA.parameters(),lr=adam_lr_g,betas=adam_beta)
 
 #========================================================
 #pool
@@ -173,7 +174,9 @@ for epoch in range(epochs):
             trainA=trainA.cuda()
             trainB=trainB.cuda()
         loss_d=d_train(trainA,trainB)
-        loss_g=g_train(trainA,trainB)
+        loss_g_1=g_train(trainA,trainB)
+        loss_g_2=g_train(trainA,trainB)
+        loss_g=(lossg_1+loss_g_2)/2
         i+=1
         loss_d_sum+=loss_d
         loss_g_sum+=loss_g
