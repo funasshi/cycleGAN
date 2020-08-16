@@ -176,7 +176,7 @@ for epoch in range(epochs):
         loss_d=d_train(trainA,trainB)
         loss_g_1=g_train(trainA,trainB)
         loss_g_2=g_train(trainA,trainB)
-        loss_g=(lossg_1+loss_g_2)/2
+        loss_g=(loss_g_1+loss_g_2)/2
         i+=1
         loss_d_sum+=loss_d
         loss_g_sum+=loss_g
